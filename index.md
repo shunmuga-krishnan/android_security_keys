@@ -1,37 +1,48 @@
-## Welcome to GitHub Pages
+## Android Security
 
-You can use the [editor on GitHub](https://github.com/shunmuga-krishnan/android_security_keys/edit/gh-pages/index.md) to maintain and preview the content for your website in Markdown files.
+Android requires that all APKs be digitally signed with a certificate at the build time and it will be verified using the PackageManager at the boot time. Application signing allows developers to identify the author of the application and to update their application without creating complicated interfaces and permissions. Every application that is run on the Android platform must be signed by the developer. The document is intended for the audience who would like to sign the build with keys and use a verifier to unparse while bootup.
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+### APK Signing schemes
 
-### Markdown
+ Android supports three application signing schemes:
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+   - v1 scheme: based on JAR signing
+   - v2 scheme: APK Signature Scheme v2, which was introduced in Android 7.0.
+   - v3 scheme: APK Signature Scheme v3, which was introduced in Android 9.
 
-```markdown
-Syntax highlighted code block
+For maximum compatibility, sign applications with all schemes, first with v1, then v2, and then v3. Android 7.0+ and newer devices install apps signed with v2+ schemes more quickly than those signed only with v1 scheme. Older Android platforms ignore v2+ signatures and thus need apps to contain v1 signatures. 
 
-# Header 1
-## Header 2
-### Header 3
+### The following standard test keys are currently included in the Android builds
 
-- Bulleted
-- List
-
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
 ```
+testkey -- a generic key for packages that do not otherwise specify a key.
+platform -- a test key for packages that are part of the core platform.
+shared -- a test key for things that are shared in the home/contacts process.
+media -- a test key for packages that are part of the media/download system.
+```
+The above key can be generated from the development/tools/make_key project from the Android sources.
 
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
+### Sample Key generation
+The following commands were used to generate the test key pairs:
 
-### Jekyll Themes
+```
+  development/tools/make_key testkey  '/C=US/ST=California/L=Mountain View/O=Android/OU=Android/CN=Android/emailAddress=android@android.com'
+  development/tools/make_key platform '/C=US/ST=California/L=Mountain View/O=Android/OU=Android/CN=Android/emailAddress=android@android.com'
+  development/tools/make_key shared   '/C=US/ST=California/L=Mountain View/O=Android/OU=Android/CN=Android/emailAddress=android@android.com'
+  development/tools/make_key media    '/C=US/ST=California/L=Mountain View/O=Android/OU=Android/CN=Android/emailAddress=android@android.com'
+```
+Note: Add the third argument as "ec" to get the ecc version of the corresponding keys.
 
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/shunmuga-krishnan/android_security_keys/settings/pages). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
+### Verification
 
-### Support or Contact
+In Android 7.0 and later, APKs can be verified according to the APK Signature Scheme V3, V2 or JAR signing (V1 scheme). Older platforms ignore V3, V2 signatures and only verify V1 signatures. 
 
-Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://support.github.com/contact) and we’ll help you sort it out.
+![](https://source.android.com/security/images/apk-v2-validation.png)
+
+
+To Know more about the Verifier schemes, here are the links,
+[V3](https://source.android.com/security/apksigning/v3), [V2](https://source.android.com/security/apksigning/v2)
+
+Hence, the PacakgeManager will parse the apk signer block and verify it against the Publickey.
+
+
